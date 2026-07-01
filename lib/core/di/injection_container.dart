@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 import '../../features/cart/cart_injection.dart';
-import '../../features/home/domain/entities/product/product_entity.dart';
 import '../../features/home/home_injection.dart';
 import '../../features/profile/profile_injection.dart';
 import '../../features/theme/theme_injection.dart';
@@ -22,11 +21,7 @@ final sl = GetIt.instance; // sl = Service Locator
 Future<void> initCore() async {
   // Storage
   await Hive.initFlutter();
-  Hive.registerAdapter(ProductEntityAdapter());
-  Hive.registerAdapter(DimensionsEntityAdapter());
-  Hive.registerAdapter(ReviewEntityAdapter());
-  Hive.registerAdapter(MetaEntityAdapter());
-  await Hive.openBox<ProductEntity>(StorageKeys.product_box);
+  await Hive.openBox(StorageKeys.product_box);
 
   await SharedPreferencesService.init();
   await LocalizationService.initialize();

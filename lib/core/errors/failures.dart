@@ -67,10 +67,14 @@ Failure failureFromDioException(DioException exception) {
     case DioExceptionType.badCertificate:
       return const ServerFailure('Bad certificate from API server.');
     case DioExceptionType.badResponse:
-      return failureFromResponse(
-        exception.response!.statusCode!,
-        exception.response!.data,
-      );
+      final response = exception.response;
+      if (response != null) {
+        return failureFromResponse(
+          response.statusCode ?? 500,
+          response.data,
+        );
+      }
+      return const ServerFailure('An unexpected bad response was received.');
     case DioExceptionType.cancel:
       return const ServerFailure('Request to API server was cancelled.');
     case DioExceptionType.connectionError:

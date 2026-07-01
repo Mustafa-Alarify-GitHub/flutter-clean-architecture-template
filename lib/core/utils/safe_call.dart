@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 import '../errors/failures.dart';
+import 'logger.dart';
 
 /// A functional programming wrapper that handles exceptions safely across asynchronous operation triggers.
 ///
@@ -27,11 +28,15 @@ Future<Either<Failure, T>> safeCall<T>(Future<T> Function() call) async {
   try {
     final result = await call();
     return Right(result);
-  } on DioException catch (e) {
+  } on DioException catch (e, stackTrace) {
+    AppLogger.error('DioException caught in safeCall', e, stackTrace);
     return Left(failureFromDioException(e));
-  } on FormatException catch (e) {
+  } on FormatException catch (e, stackTrace) {
+    AppLogger.error('FormatException caught in safeCall', e, stackTrace);
     return Left(ServerFailure(e.message));
-  } catch (e) {
+  } catch (e, stackTrace) {
+    AppLogger.error('Unexpected exception caught in safeCall', e, stackTrace);
     return Left(ServerFailure(e.toString()));
   }
 }
+

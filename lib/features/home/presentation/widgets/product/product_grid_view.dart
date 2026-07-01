@@ -44,7 +44,7 @@ class _ProductGridViewState extends State<ProductGridView> {
 
     if (currentPosition >= 0.7 * maxScrollLength) {
       final cubit = context.read<ProductCubit>();
-      if (!_isLoadingMore && !cubit.hasReachedMax && cubit.state is! ProductLoading) {
+      if (!_isLoadingMore && !cubit.state.hasReachedMax && cubit.state is! ProductLoading) {
         setState(() {
           _isLoadingMore = true;
         });
@@ -74,7 +74,7 @@ class _ProductGridViewState extends State<ProductGridView> {
       body: BlocBuilder<ProductCubit, ProductState>(
         builder: (context, state) {
           final cubit = context.read<ProductCubit>();
-          final products = cubit.products;
+          final products = state.products;
 
           if (state is ProductLoading && products.isEmpty) {
             return const Center(child: LoadingWidget(message: 'Loading products...'));

@@ -10,31 +10,24 @@ class ProductCubit extends Cubit<ProductState>
     with CancelableSafeCubitMixin<ProductState> {
   final GetProductUseCase getProductUseCase;
 
-  final List<ProductEntity> _products = [];
-  List<ProductEntity> get products => List.unmodifiable(_products);
-
-  bool hasReachedMax = false;
-
-  ProductCubit(this.getProductUseCase) : super(ProductInitial());
+  ProductCubit(this.getProductUseCase) : super(const ProductInitial());
 
   Future<void> loadProducts({int limit = 10, bool isRefresh = false}) async {
-    if (isRefresh) {
-      _products.clear();
-      hasReachedMax = false;
-      safeEmit(ProductInitial());
-    }
+    final currentProducts = isRefresh ? <ProductEntity>[] : state.products;
+    final currentlyReachedMax = isRefresh ? false : state.hasReachedMax;
 
-    if (hasReachedMax) {
+    if (currentlyReachedMax) {
       return;
     }
 
-    if (_products.isEmpty) {
-      safeEmit(ProductLoading());
-    }
+    safeEmit(ProductLoading(
+      products: currentProducts,
+      hasReachedMax: currentlyReachedMax,
+    ));
 
     final result = await runCancelable(
       getProductUseCase.call(
-        PaginationParams(skip: _products.length, limit: limit),
+        PaginationParams(skip: currentProducts.length, limit: limit),
       ),
     );
 
@@ -44,14 +37,20 @@ class ProductCubit extends Cubit<ProductState>
 
     result.fold(
       (failure) {
-        safeEmit(ProductError(failure.message));
+        safeEmit(ProductError(
+          failure.message,
+          products: currentProducts,
+          hasReachedMax: currentlyReachedMax,
+        ));
       },
       (newProducts) {
-        if (newProducts.isEmpty || newProducts.length < limit) {
-          hasReachedMax = true;
-        }
-        _products.addAll(newProducts);
-        safeEmit(ProductLoaded(List.from(_products)));
+        final allProducts = List<ProductEntity>.from(currentProducts)..addAll(newProducts);
+        final reachedMax = newProducts.isEmpty || newProducts.length < limit;
+
+        safeEmit(ProductLoaded(
+          products: allProducts,
+          hasReachedMax: reachedMax,
+        ));
       },
     );
   }
